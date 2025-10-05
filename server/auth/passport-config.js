@@ -3,26 +3,11 @@ const mongoose = require('mongoose');
 
 // Simple user model for OAuth
 const userSchema = new mongoose.Schema({
-    googleId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    displayName: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    avatar: {
-        type: String
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    googleId: { type: String, required: true, unique: true },
+    displayName: { type: String, required: true },
+    email: { type: String, required: true },
+    avatar: { type: String },
+    createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -31,14 +16,13 @@ module.exports = (passport) => {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: '/auth/google/callback'
+        callbackURL: process.env.REDIRECT_URI // <-- use full URI from .env
     }, async (accessToken, refreshToken, profile, done) => {
         try {
             // Check if user already exists
             let existingUser = await User.findOne({ googleId: profile.id });
             
             if (existingUser) {
-                // User exists, update their info
                 existingUser.displayName = profile.displayName;
                 existingUser.email = profile.emails[0].value;
                 existingUser.avatar = profile.photos[0].value;
